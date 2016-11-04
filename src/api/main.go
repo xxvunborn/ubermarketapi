@@ -29,6 +29,11 @@ type Product struct {
 	IdCategory     int    `db:"id_category" json:"id_category"`
 }
 
+type Authenticator struct {
+	Email    string `db:"email" json:"email"`
+	Password string `db:"password" json:"password"`
+}
+
 var dbmap = initDb()
 
 func checkErr(err error, msg string) {
@@ -71,6 +76,8 @@ func main() {
 
 		v1.GET("/products", getProducts)
 		v1.GET("/product/:id", getProduct)
+
+		v1.POST("/authentication", authentication)
 	}
 	r.Run(":3000")
 }
@@ -223,4 +230,18 @@ func getProduct(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "user not found"})
 	}
 	// curl -i http://localhost:3000/api/v1/users/1
+}
+func authentication(c *gin.Context) {
+	var user User
+	c.Bind(&user)
+
+	if user.Email != "" && user.Password != "" {
+		err := dbmap.SelectOne(&user, "SELECT * FROM user WHERE email=? and password=?", user.Email, user.Password)
+		if err == nil {
+			c.JSON(200, gin.H{"token": "authenticated"})
+		} else {
+			c.JSON(404, gin.H{"error": "User and/or password is incorrect"})
+		}
+
+	}
 }

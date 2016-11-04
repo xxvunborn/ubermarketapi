@@ -22,6 +22,27 @@ Routes
 [GET] 		/api/product/:id
 ```
 
+For Authenticated
+
+```
+[POST] /api/v1/authenticated
+```
+
+```
+Mode of use:
+send POST with json params
+
+Example:
+{
+	"email": "unborn.system@gmail.com",
+	"password":"12333456"
+}
+
+return
+ 	"token": "Authenticated" 
+return
+	 "error" : "User and/or password is incorrect" 
+```
 
 Dependencies
 --
