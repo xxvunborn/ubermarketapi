@@ -64,9 +64,9 @@ func initDb() *gorp.DbMap {
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.MySQLDialect{"InnoDB", "UTF8"}}
 
 	// Create table if not exists
-	//dbmap.AddTableWithName(User{}, "User").SetKeys(true, "Id")
-	//err = dbmap.CreateTablesIfNotExists()
-	//checkErr(err, "Create table failed")
+	dbmap.AddTableWithName(User{}, "User").SetKeys(true, "Id")
+	err = dbmap.CreateTablesIfNotExists()
+	checkErr(err, "Create table failed")
 
 	return dbmap
 }
@@ -179,7 +179,7 @@ func updateUser(c *gin.Context) {
 		if user.Email != "" && user.Password != "" {
 			_, err = dbmap.Update(&user)
 
-			if err != nil {
+			if err == nil {
 				c.JSON(200, user)
 			} else {
 				checkErr(err, "Update failed")
