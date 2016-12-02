@@ -29,6 +29,13 @@ type Product struct {
 	IdCategory     int    `db:"id_category" json:"id_category"`
 }
 
+type Order struct {
+	Id          int64 `db:id json"id"`
+	IdUser      int64 `db:"id_user" json:"id_user"`
+	OrderNumber int64 `db:"order_number" json:"order_number"`
+	IdProduct   int64 `db:"id_product" json:"id_product"`
+}
+
 type Authenticator struct {
 	Email    string `db:"email" json:"email"`
 	Password string `db:"password" json:"password"`
@@ -78,6 +85,9 @@ func main() {
 		v1.GET("/product/:id", getProduct)
 
 		v1.POST("/authentication", authentication)
+
+		v1.POST("/order", postOrder)
+		v1.POST("/order/verify/:order", verifyOrder)
 	}
 	r.Run(":3000")
 }
@@ -244,4 +254,42 @@ func authentication(c *gin.Context) {
 		}
 
 	}
+}
+
+func postOrder(c *gin.Context) {
+	var order Order
+	c.Bind(&order)
+
+	if order.IdProduct != 0 {
+
+		if insert, _ := dbmap.Exec(`INSERT INTO order_Product (id_user, id_product, order_number) VALUES (?, ?, ?)`, order.IdUser, order.IdProduct, order.OrderNumber); insert != nil {
+			order_id, err := insert.LastInsertId()
+			if err == nil {
+				content := &Order{
+					Id:          order_id,
+					IdUser:      order.IdUser,
+					IdProduct:   order.IdProduct,
+					OrderNumber: order.OrderNumber,
+				}
+				c.JSON(201, content)
+			} else {
+				checkErr(err, "Insert failed")
+			}
+		}
+	} else {
+		c.JSON(422, gin.H{"error": "field are empty"})
+	}
+	// curl -i -X POST -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Queen\" }" http://localhost:8080/api/v1/users
+}
+
+func verifyOrder(c *gin.Context) {
+	order := c.Params.ByName("order")
+	err := dbmap.SelectOne("SELECT * FROM order_product WHERE id=?", order)
+
+	if err != nil {
+		c.JSON(200, gin.H{"verify": "Verify Complete"})
+		// Change delivered 0 to 1 in purchase table  to end the circle
+		// dbmap.Exec(`UPDATE purchase SET delivered=0 where id_order = ?`, order)
+	}
+	// curl -i -X PUT -H "Content-Type: application/json" -d "{ \"firstname\": \"Thea\", \"lastname\": \"Merlyn\" }" http://localhost:8080/api/v1/users/1
 }
