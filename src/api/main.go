@@ -41,6 +41,15 @@ type Authenticator struct {
 	Password string `db:"password" json:"password"`
 }
 
+type Client struct {
+	Id           int64  `db:id json:"id"`
+	IdUser       int64  `db:"id_user" json:"id_user"`
+	DueDate      int64  `db:"due_date" json:"due_date"`
+	NumberOfCard int64  `db:"number_of_card" json:"number_of_card"`
+	Address      string `db:"address" json:"address"`
+	TypeOfCard   string `db:"type_of_card" json:"type_of_card"`
+}
+
 var dbmap = initDb()
 
 func checkErr(err error, msg string) {
@@ -152,7 +161,7 @@ func postUser(c *gin.Context) {
 func updateUser(c *gin.Context) {
 	id := c.Params.ByName("id")
 	var user User
-	err := dbmap.SelectOne(&user, "SELECT * FROM User WHERE id=?", id)
+	err := dbmap.SelectOne(&user, "SELECT * FROM user WHERE id=?", id)
 
 	if err == nil {
 		var json User
@@ -164,18 +173,19 @@ func updateUser(c *gin.Context) {
 			Id:       user_id,
 			Email:    json.Email,
 			Password: json.Password,
+			Name:     json.Name,
 		}
 
 		if user.Email != "" && user.Password != "" {
 			_, err = dbmap.Update(&user)
 
-			if err == nil {
+			if err != nil {
 				c.JSON(200, user)
 			} else {
 				checkErr(err, "Update failed")
 			}
 		} else {
-			c.JSON(422, gin.H{"error": "Field are empty"})
+			c.JSON(422, gin.H{"error": "No data"})
 		}
 
 	} else {
